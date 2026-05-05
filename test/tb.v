@@ -2,7 +2,6 @@
 `timescale 1ns / 1ps
 
 module tb ();
-
     initial begin
         $dumpfile("tb.fst");
         $dumpvars(0, tb);
@@ -44,5 +43,4 @@ module tb ();
         .clk    (clk),
         .rst_n  (rst_n)
     );
-
 endmodule
