@@ -30,9 +30,8 @@ module tiny_cpu (
     reg [2:0] pc;
     reg [7:0] reg_a, reg_b;
     
-    // REDUCED TO 32 BYTES: Cuts flip-flops and MUX trees in half.
-    // This is the Goldilocks zone for ~70% utilization on a 1x1 tile.
-    reg [7:0] ram [31:0];  
+    // REDUCED TO 16 BYTES: Leaves enough room for CTS and timing buffers.
+    reg [7:0] ram [15:0];  
     
     wire [7:0] instruction;
     
@@ -41,17 +40,11 @@ module tiny_cpu (
     wire reg_sel = instruction[3];  
     wire imm_mode = instruction[4];
     
-    // Use the bottom 5 bits of reg_b as the RAM address (0 to 31)
-    wire [4:0] ram_addr = reg_b[4:0];
+    // Use the bottom 4 bits of reg_b as the RAM address (0 to 15)
+    wire [3:0] ram_addr = reg_b[3:0];
     wire [7:0] alu_result = reg_a + ram[ram_addr];
 
     // HARDWIRED ROM
-    // pc=0: 0x10 -> LOAD reg_a from keyboard_in ('W')
-    // pc=1: 0x18 -> LOAD reg_b from keyboard_in (Address pointer)
-    // pc=2: 0x40 -> STORE reg_a to ram[reg_b]   (Forces tool to keep RAM)
-    // pc=3: 0x80 -> LOAD reg_a from ram[reg_b]  (Proves RAM works)
-    // pc=4: 0xC0 -> STORE reg_a to screen       (Outputs 'W')
-    // pc=5: 0xD5 -> JUMP to pc=5                (Halt)
     assign instruction = (pc == 3'd0) ? 8'h10 :
                          (pc == 3'd1) ? 8'h18 :
                          (pc == 3'd2) ? 8'h40 :
