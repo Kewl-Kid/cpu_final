@@ -30,18 +30,19 @@ module tiny_cpu (
     reg [2:0] pc;
     reg [7:0] reg_a, reg_b;
     
-    // 64 bytes of RAM. Will take up ~512 flip-flops.
-    reg [7:0] ram [63:0];  
+    // REDUCED TO 32 BYTES: Cuts flip-flops and MUX trees in half.
+    // This is the Goldilocks zone for ~70% utilization on a 1x1 tile.
+    reg [7:0] ram [31:0];  
     
     wire [7:0] instruction;
     
     wire [1:0] opcode = instruction[7:6];
-    wire [2:0] jump_addr = instruction[2:0]; // Only used for jumping now
+    wire [2:0] jump_addr = instruction[2:0]; 
     wire reg_sel = instruction[3];  
     wire imm_mode = instruction[4];
     
-    // ARCHITECTURE CHANGE: Use the bottom 6 bits of reg_b as the RAM address
-    wire [5:0] ram_addr = reg_b[5:0];
+    // Use the bottom 5 bits of reg_b as the RAM address (0 to 31)
+    wire [4:0] ram_addr = reg_b[4:0];
     wire [7:0] alu_result = reg_a + ram[ram_addr];
 
     // HARDWIRED ROM
