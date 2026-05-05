@@ -1,17 +1,17 @@
 # Tiny Tapeout project information
 project:
-  title:        ""      # Project title
-  author:       ""      # Your name
+  title:        "funproj"      # Project title
+  author:       "Kewl-Kid"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
+  description:  "basic word editing"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
+  clock_hz:     10000000       # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
-  top_module:  "tt_um_example"
+  top_module:  "tt_um_funproj"
 
   # List your project's source files here.
   # Source files must be in ./src and you must list each source file separately, one per line.
@@ -22,25 +22,25 @@ project:
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
-  # Inputs
-  ui[0]: ""
-  ui[1]: ""
-  ui[2]: ""
-  ui[3]: ""
-  ui[4]: ""
-  ui[5]: ""
-  ui[6]: ""
-  ui[7]: ""
+  # Inputs (Keyboard)
+  ui[0]: "kbd_in[0]"
+  ui[1]: "kbd_in[1]"
+  ui[2]: "kbd_in[2]"
+  ui[3]: "kbd_in[3]"
+  ui[4]: "kbd_in[4]"
+  ui[5]: "kbd_in[5]"
+  ui[6]: "kbd_in[6]"
+  ui[7]: "kbd_in[7]"
 
-  # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: ""
-  uo[4]: ""
-  uo[5]: ""
-  uo[6]: ""
-  uo[7]: ""
+  # Outputs (Screen)
+  uo[0]: "scr_out[0]"
+  uo[1]: "scr_out[1]"
+  uo[2]: "scr_out[2]"
+  uo[3]: "scr_out[3]"
+  uo[4]: "scr_out[4]"
+  uo[5]: "scr_out[5]"
+  uo[6]: "scr_out[6]"
+  uo[7]: "scr_out[7]"
 
   # Bidirectional pins
   uio[0]: ""
