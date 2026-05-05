@@ -10,13 +10,12 @@ module tt_um_funproj (
     input  wire       clk, 
     input  wire       rst_n
 );
-    // Tie off unused bidirectional pins securely
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
     tiny_cpu my_cpu (
         .clk(clk),
-        .reset(~rst_n), // Active high internal reset
+        .reset(~rst_n), 
         .keyboard_in(ui_in), 
         .screen_out(uo_out)
     );
@@ -31,35 +30,33 @@ module tiny_cpu (
     reg [2:0] pc;
     reg [7:0] reg_a, reg_b;
     
-    // FIX: 64 bytes of 8-bit RAM (Yields ~70% utilization on 1x1 tile)
-    reg [7:0] ram [63:0] /* synthesis keep */;  
+    // 64 bytes of RAM. Will take up ~512 flip-flops.
+    reg [7:0] ram [63:0];  
     
     wire [7:0] instruction;
-    wire [7:0] alu_result;
     
     wire [1:0] opcode = instruction[7:6];
-    wire [2:0] addr = instruction[2:0];
-    wire reg_sel = instruction[3];  // 0=reg_a, 1=reg_b
+    wire [2:0] jump_addr = instruction[2:0]; // Only used for jumping now
+    wire reg_sel = instruction[3];  
     wire imm_mode = instruction[4];
     
-    reg [7:0] rom [7:0];
-    
-    // Initial block ensures GLS simulation doesn't propagate 'X' (Unknown) states
-    integer i;
-    initial begin
-        // Program: Load 'W' from RAM, Store to Screen, Infinite Loop
-        rom[0] = 8'b10000000;  // LOAD reg_a from ram[0]
-        rom[1] = 8'b11000000;  // STORE reg_a to screen
-        rom[2] = 8'b11010010;  // JUMP to pc=2 (Loop)
-        for (i = 3; i < 8; i = i + 1) rom[i] = 8'h00;
+    // ARCHITECTURE CHANGE: Use the bottom 6 bits of reg_b as the RAM address
+    wire [5:0] ram_addr = reg_b[5:0];
+    wire [7:0] alu_result = reg_a + ram[ram_addr];
 
-        // Pre-fill RAM to prevent GLS failures
-        ram[0] = 8'h57; // 'W'
-        for (i = 1; i < 64; i = i + 1) ram[i] = 8'h00;
-    end
-    
-    assign instruction = rom[pc];
-    assign alu_result = reg_a + ram[addr];
+    // HARDWIRED ROM
+    // pc=0: 0x10 -> LOAD reg_a from keyboard_in ('W')
+    // pc=1: 0x18 -> LOAD reg_b from keyboard_in (Address pointer)
+    // pc=2: 0x40 -> STORE reg_a to ram[reg_b]   (Forces tool to keep RAM)
+    // pc=3: 0x80 -> LOAD reg_a from ram[reg_b]  (Proves RAM works)
+    // pc=4: 0xC0 -> STORE reg_a to screen       (Outputs 'W')
+    // pc=5: 0xD5 -> JUMP to pc=5                (Halt)
+    assign instruction = (pc == 3'd0) ? 8'h10 :
+                         (pc == 3'd1) ? 8'h18 :
+                         (pc == 3'd2) ? 8'h40 :
+                         (pc == 3'd3) ? 8'h80 :
+                         (pc == 3'd4) ? 8'hC0 :
+                         (pc == 3'd5) ? 8'hD5 : 8'h00;
     
     always @(posedge clk) begin
         if (reset) begin
@@ -81,7 +78,7 @@ module tiny_cpu (
                 end
                 
                 2'b01: begin  // STORE to RAM
-                    ram[addr] <= reg_sel ? reg_b : reg_a;
+                    ram[ram_addr] <= reg_sel ? reg_b : reg_a;
                     pc <= pc + 1;
                 end
                 
@@ -90,15 +87,15 @@ module tiny_cpu (
                         if (reg_sel) reg_b <= keyboard_in;
                         else reg_a <= keyboard_in;
                     end else begin
-                        if (reg_sel) reg_b <= ram[addr];
-                        else reg_a <= ram[addr];
+                        if (reg_sel) reg_b <= ram[ram_addr];
+                        else reg_a <= ram[ram_addr];
                     end
                     pc <= pc + 1;
                 end
                 
                 2'b11: begin  // STORE to screen / JUMP
                     if (imm_mode) begin
-                        pc <= addr;  // JUMP
+                        pc <= jump_addr;  // JUMP
                     end else begin
                         screen_out <= reg_sel ? reg_b : reg_a;
                         pc <= pc + 1;
